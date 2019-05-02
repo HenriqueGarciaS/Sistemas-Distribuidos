@@ -1,6 +1,8 @@
 package mensagem;
 
-public class Mensagem {
+import java.io.Serializable;
+
+public class Mensagem implements Serializable {
 
     private int tipoDaMensagem;
     private  String Mensagem;
