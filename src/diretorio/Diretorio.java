@@ -1,5 +1,6 @@
 package diretorio;
 
+import org.omg.CORBA.Object;
 import servidor.Servidor;
 import mensagem.Mensagem;
 
@@ -14,46 +15,45 @@ public class Diretorio {
 
 
     public static void main(String[] args) throws Exception {
-        try {
-            ArrayList<Servidor> servidoresCadastrados = new ArrayList<>();
-            int portaCliente;
-            ServerSocket diretorio = new ServerSocket(32221);
-            while (true) {
-                System.out.println("diretorio está em execução");
-                Socket conexao = diretorio.accept();
-                ObjectOutputStream transmissor = new ObjectOutputStream(conexao.getOutputStream());
-                ObjectInputStream receptor = new ObjectInputStream(conexao.getInputStream());
-                System.out.println("sem deadlock, uhuu");
-                Mensagem mensagem = (Mensagem) receptor.readObject();
-                System.out.println(mensagem.getMensagem());
-                switch (mensagem.getTipoDaMensagem()) {
-                    case 0:
-                        Servidor novoServidor = new Servidor(mensagem.getPorta());
-                        servidoresCadastrados.add(novoServidor);
-                        System.out.println("servidor de porta:" + mensagem.getPorta() + " cadastrado");
-                        break;
-                    case 1:
-                        for (int i = 0; i < servidoresCadastrados.size(); i++) {
-                            Servidor servidor = servidoresCadastrados.get(i);
-                            Socket resposta = new Socket("127.0.0.1", servidor.getPorta());
-                            portaCliente = mensagem.getPorta();
-                            transmissor.writeObject(mensagem);
-                            transmissor.flush();
-                        }
-                        break;
-                    case 2:
-                        portaCliente = mensagem.getPorta();
-                        Socket respsota = new Socket("127.0.0.1", portaCliente);
-                        transmissor.writeObject(mensagem);
-                        transmissor.flush();
-                }
-            }
+      try{
+          ArrayList<Servidor> servidoresCadastrados = new ArrayList<>();
+          ServerSocket diretorio = new ServerSocket(32221);
+          while(true){
+              System.out.println("Diretorio está em execução");
+              Socket conexao = diretorio.accept();
+              ObjectInputStream receptor = new ObjectInputStream(conexao.getInputStream());
+              Mensagem mensagem_recebida = (Mensagem) receptor.readObject();
+              System.out.println("Mensagem recebida:");
+              System.out.println(mensagem_recebida.getMensagem());
+              switch (mensagem_recebida.getTipoDaMensagem()){
+                  case 0:
+                      System.out.println("cadastrando o servidor de porta:"+mensagem_recebida.getPorta());
+                      Servidor servidor_para_cadastrar = new Servidor(mensagem_recebida.getPorta());
+                      servidoresCadastrados.add(servidor_para_cadastrar);
+                      break;
+                  case 1:
+                      System.out.println("Enviando ao todos os servidores para a recuperação de dados");
+                      for( int i = 0; i < servidoresCadastrados.size(); i++)
+                      {
+                          Servidor servidorAenviar = servidoresCadastrados.get(i);
+                          Socket requisisaoAServidor = new Socket("127.0.0.1", servidorAenviar.getPorta());
+                          ObjectOutputStream transmissor = new ObjectOutputStream(requisisaoAServidor.getOutputStream());
+                          transmissor.writeObject(mensagem_recebida);
+                          transmissor.flush();
+                      }
+                      break;
+              }
+              }
+          }
+      catch(Exception erro)
+      {
+          System.err.println("erro ao iniciar");
+      }
 
-        } catch (Exception erro) {
-            System.err.println("erro ao iniciar o diretorio");
-        }
+      }
+
 
     }
-}
+
 
 

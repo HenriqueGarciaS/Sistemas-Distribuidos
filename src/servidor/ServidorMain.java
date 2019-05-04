@@ -7,61 +7,75 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import jdk.internal.util.xml.impl.Input;
 import mensagem.Mensagem;
 
 public class ServidorMain {
 	
 	 public static void main(String [] args) throws Exception{
-	   try{
-	   	  String respostaParaClienteLetra  = "A";
-	   	  String respostaParaClienteNumero = "3";
-          Servidor servidor;
-	      Socket conexao = new Socket("127.0.0.1",32221);
-	      ObjectOutputStream transmissor = new ObjectOutputStream(conexao.getOutputStream());
-	      ObjectInputStream receptor = new ObjectInputStream(conexao.getInputStream());
-	      BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
-	      String linha;
+	  try{
+	      Servidor servidor;
+	      BufferedReader teclado = new BufferedReader( new InputStreamReader(System.in));
+	      String porta = null;
 	      do{
-	      	System.out.println("digite a porta que será usada por esses por esse servidor no maximo 5 números"); // até cinco numeros
-	      	linha = teclado.readLine();
-		  }while(linha.length()<5 && linha.length()<6);
-	      int porta = Integer.parseInt(linha);
-	      servidor = new Servidor(porta);
-	      Mensagem mensagemAenviar = servidor.criarMensagemdeCadastro();
-	      transmissor.writeObject(mensagemAenviar);
+	          System.out.println("digite a porta que será usado pelo servidor no máximo 5 números");
+	          porta = teclado.readLine();
+	          int portaDoservidor = Integer.parseInt(porta);
+	          servidor = new Servidor(portaDoservidor);
+          }while(porta.length()<5 && porta.length()>6);
+	      Socket conexaoAoDiretorio = new Socket("127.0.0.1",32221);
+	      ObjectOutputStream transmissor = new ObjectOutputStream(conexaoAoDiretorio.getOutputStream());
+	      System.out.println("Enviando mensagem de cadastrado ao diretorio");
+	      transmissor.writeObject(servidor.criarMensagemdeCadastro());
 	      transmissor.flush();
-	      System.out.println("Enviando a mensagem de cadastro ao diretorio");
-
-	      while (true){
-	      	System.out.println("Esperando requisões");
-	      	ServerSocket resposta_do_diretorio = new ServerSocket(servidor.getPorta());
-	      	Socket resposta = resposta_do_diretorio.accept();
-	      	ObjectOutputStream transmissor_resposta = new ObjectOutputStream(resposta.getOutputStream());
-	      	ObjectInputStream receptor_resposta = new ObjectInputStream(resposta.getInputStream());
-	      	Mensagem mensagem_requisao = (Mensagem) receptor_resposta.readObject();
-	      	if (mensagem_requisao.getMensagem().toUpperCase().equals("LETRA"))
+	      ServerSocket requisisaoDodiretorio = new ServerSocket(servidor.getPorta());
+	      System.out.println("esperando requisições");
+	      while(true){
+	      	Socket respostaParacliente = requisisaoDodiretorio.accept();
+	      	ObjectInputStream receptor_requisisao = new ObjectInputStream(respostaParacliente.getInputStream());
+	      	Mensagem requisao  = (Mensagem) receptor_requisisao.readObject();
+	      	switch (verificarTipoDeDado(requisao))
 			{
-				Mensagem mensagem_resposta = new Mensagem(2,respostaParaClienteLetra,servidor.getPorta());
-				transmissor.writeObject(mensagem_resposta);
-				transmissor.flush();
+				case 1: {
+					Socket conexaoAocliente = new Socket("127.0.0.1", requisao.getPorta());
+					Mensagem envio = new Mensagem(0, servidor.getLetra(), 32221);
+					ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAocliente.getOutputStream());
+					transmissor_resposta.writeObject(envio);
+					transmissor_resposta.flush();
+					break;
+				}
+					case 2: {
+						Socket conexaoAoCliente = new Socket("127.0.0.1", requisao.getPorta());
+						Mensagem envio = new Mensagem(0,servidor.getNumero(),32221);
+						ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAoCliente.getOutputStream());
+						transmissor_resposta.writeObject(envio);
+						transmissor_resposta.flush();
+						break;
+					}
 			}
-	      	else if(mensagem_requisao.getMensagem().toUpperCase().equals("NUMERO") || mensagem_requisao.getMensagem().toUpperCase().equals("NÚMERO"))
-			{
-				Mensagem mensagem_resposta = new Mensagem(2,respostaParaClienteNumero,servidor.getPorta());
-				transmissor.writeObject(mensagem_resposta);
-				transmissor.flush();
-			}
+		  }
+
+      }
+	  catch(Exception erro)
+         {
+             System.err.println("erro ao iniciar");
+         }
+}
+
+public static int verificarTipoDeDado(Mensagem mensagem)
+{
+	switch (mensagem.getMensagem()){
+		case "LETRA" :
+			return 1;
+
+		case "NUMERO" :
+			return 2;
 
 
+	}
+return 0;
+}
 
-	      }
-
-	   }
-	   catch(Exception erro)
-	   {
-	   	System.err.println("erro ao iniciar o servidor");
-	   }
-	 }
 }
 
 
