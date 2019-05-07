@@ -42,6 +42,16 @@ public class Diretorio {
                           transmissor.flush();
                       }
                       break;
+                  case 2:
+                      System.out.println("enviando a requisição de escrita para o servidor");
+                      for(int i = 0 ; i < servidoresCadastrados.size(); i++)
+                      {
+                          Servidor servidorAenviar = servidoresCadastrados.get(i);
+                          Socket requisisaoAServidor = new Socket("127.0.0.1", servidorAenviar.getPorta());
+                          ObjectOutputStream transmissor = new ObjectOutputStream(requisisaoAServidor.getOutputStream());
+                          transmissor.writeObject(mensagem_recebida);
+                          transmissor.flush();
+                      }
               }
               }
           }

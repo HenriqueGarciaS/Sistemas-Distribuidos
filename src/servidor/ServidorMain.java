@@ -34,23 +34,13 @@ public class ServidorMain {
 	      	Socket respostaParacliente = requisisaoDodiretorio.accept();
 	      	ObjectInputStream receptor_requisisao = new ObjectInputStream(respostaParacliente.getInputStream());
 	      	Mensagem requisao  = (Mensagem) receptor_requisisao.readObject();
-	      	switch (verificarTipoDeDado(requisao))
+	      	switch (requisao.getTipoDaMensagem())
 			{
 				case 1: {
-					Socket conexaoAocliente = new Socket("127.0.0.1", requisao.getPorta());
-					Mensagem envio = new Mensagem(0, servidor.getLetra(), 32221);
-					ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAocliente.getOutputStream());
-					transmissor_resposta.writeObject(envio);
-					transmissor_resposta.flush();
-					break;
+					VerificarTipoDeDado(requisao,servidor);
 				}
 					case 2: {
-						Socket conexaoAoCliente = new Socket("127.0.0.1", requisao.getPorta());
-						Mensagem envio = new Mensagem(0,servidor.getNumero(),32221);
-						ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAoCliente.getOutputStream());
-						transmissor_resposta.writeObject(envio);
-						transmissor_resposta.flush();
-						break;
+						escritaDedado(requisao,servidor);
 					}
 			}
 		  }
@@ -62,20 +52,70 @@ public class ServidorMain {
          }
 }
 
-public static int verificarTipoDeDado(Mensagem mensagem)
+public static void VerificarTipoDeDado(Mensagem mensagem, Servidor servidor) throws Exception
 {
-	switch (mensagem.getMensagem()){
-		case "LETRA" :
-			return 1;
+	switch (mensagem.getMensagem())
+	{
+		case "LETRA": {
+			Socket conexaoAocliente = new Socket("127.0.0.1", mensagem.getPorta());
+			Mensagem envio = new Mensagem(0, servidor.getLetra(), 32221);
+			ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAocliente.getOutputStream());
+			transmissor_resposta.writeObject(envio);
+			transmissor_resposta.flush();
+			break;
+		}
+		case "NUMERO": {
+			Socket conexaoAoCliente = new Socket("127.0.0.1", mensagem.getPorta());
+			Mensagem envio = new Mensagem(0,servidor.getNumero(),32221);
+			ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAoCliente.getOutputStream());
+			transmissor_resposta.writeObject(envio);
+			transmissor_resposta.flush();
+			break;
+		}
+	}
+}
 
-		case "NUMERO" :
-			return 2;
+
+public static void escritaDedado(Mensagem mensagem, Servidor servidor) throws Exception
+{
+	switch(mensagem.getMensagem())
+	{
+		case "LETRA":
+		{
+			Socket conexaoAocliente = new Socket("127.0.0.1",mensagem.getPorta());
+			Mensagem envio = new Mensagem(0,"valor do atributo:"+servidor.getLetra(), mensagem.getPorta());
+			ObjectOutputStream transmissorAocliente = new ObjectOutputStream(conexaoAocliente.getOutputStream());
+			transmissorAocliente.writeObject(envio);
+			transmissorAocliente.flush();
+			ObjectInputStream receptorDocliente = new ObjectInputStream(conexaoAocliente.getInputStream());
+			Mensagem variavel = (Mensagem) receptorDocliente.readObject();
+			servidor.escreverNaletra(variavel);
+            Mensagem resposta = new Mensagem(0,"valor mudado",mensagem.getPorta());
+			transmissorAocliente.writeObject(resposta);
+			transmissorAocliente.flush();
+		}
+		case "NUMERO":
+		{
+			Socket conexaoAocliente = new Socket("127.0.0.1",mensagem.getPorta());
+			Mensagem envio = new Mensagem(0,"valor do atributo:"+servidor.getLetra(), mensagem.getPorta());
+			ObjectOutputStream transmissorAocliente = new ObjectOutputStream(conexaoAocliente.getOutputStream());
+			transmissorAocliente.writeObject(envio);
+			transmissorAocliente.flush();
+			ObjectInputStream receptorDocliente = new ObjectInputStream(conexaoAocliente.getInputStream());
+			Mensagem variavel = (Mensagem) receptorDocliente.readObject();
+			servidor.escreverNonumero(variavel);
+			Mensagem resposta = new Mensagem(0,"valor mudado",mensagem.getPorta());
+			transmissorAocliente.writeObject(resposta);
+			transmissorAocliente.flush();
+		}
+	}
+}
 
 
 	}
-return 0;
-}
 
-}
+
+
+
 
 
