@@ -6,8 +6,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
-import jdk.internal.util.xml.impl.Input;
 import mensagem.Mensagem;
 
 public class ServidorMain {
@@ -17,6 +17,7 @@ public class ServidorMain {
 	      Servidor servidor;
 	      BufferedReader teclado = new BufferedReader( new InputStreamReader(System.in));
 	      String porta = null;
+	      ArrayList<String> log = null;
 	      do{
 	          System.out.println("digite a porta que será usado pelo servidor no máximo 5 números");
 	          porta = teclado.readLine();
@@ -33,18 +34,22 @@ public class ServidorMain {
 	      while(true){
 	      	Socket respostaParacliente = requisisaoDodiretorio.accept();
 	      	ObjectInputStream receptor_requisisao = new ObjectInputStream(respostaParacliente.getInputStream());
-	      	Mensagem requisao  = (Mensagem) receptor_requisisao.readObject();
-	      	switch (requisao.getTipoDaMensagem())
+	      	Mensagem requisisao  = (Mensagem) receptor_requisisao.readObject();
+	      	switch (requisisao.getTipoDaMensagem())
 			{
 				case 1: {
-					VerificarTipoDeDado(requisao,servidor);
+					VerificarTipoDeDado(requisisao,servidor);
+					break;
 				}
 					case 2: {
-						escritaDedado(requisao,servidor);
+						escritaDedado(requisisao,servidor);
+						break;
 					}
 			}
+	      	escreveLog(log,servidor,requisisao);
+	      	
 		  }
-
+	      
       }
 	  catch(Exception erro)
          {
@@ -62,14 +67,16 @@ public static void VerificarTipoDeDado(Mensagem mensagem, Servidor servidor) thr
 			ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAocliente.getOutputStream());
 			transmissor_resposta.writeObject(envio);
 			transmissor_resposta.flush();
+			conexaoAocliente.close();
 			break;
 		}
 		case "NUMERO": {
-			Socket conexaoAoCliente = new Socket("127.0.0.1", mensagem.getPorta());
+			Socket conexaoAocliente = new Socket("127.0.0.1", mensagem.getPorta());
 			Mensagem envio = new Mensagem(0,servidor.getNumero(),32221);
-			ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAoCliente.getOutputStream());
+			ObjectOutputStream transmissor_resposta = new ObjectOutputStream(conexaoAocliente.getOutputStream());
 			transmissor_resposta.writeObject(envio);
 			transmissor_resposta.flush();
+			conexaoAocliente.close();
 			break;
 		}
 	}
@@ -93,11 +100,13 @@ public static void escritaDedado(Mensagem mensagem, Servidor servidor) throws Ex
             Mensagem resposta = new Mensagem(0,"valor mudado",mensagem.getPorta());
 			transmissorAocliente.writeObject(resposta);
 			transmissorAocliente.flush();
+			conexaoAocliente.close();
+			break;
 		}
 		case "NUMERO":
 		{
 			Socket conexaoAocliente = new Socket("127.0.0.1",mensagem.getPorta());
-			Mensagem envio = new Mensagem(0,"valor do atributo:"+servidor.getLetra(), mensagem.getPorta());
+			Mensagem envio = new Mensagem(0,"valor do atributo:"+servidor.getNumero(), mensagem.getPorta());
 			ObjectOutputStream transmissorAocliente = new ObjectOutputStream(conexaoAocliente.getOutputStream());
 			transmissorAocliente.writeObject(envio);
 			transmissorAocliente.flush();
@@ -107,11 +116,22 @@ public static void escritaDedado(Mensagem mensagem, Servidor servidor) throws Ex
 			Mensagem resposta = new Mensagem(0,"valor mudado",mensagem.getPorta());
 			transmissorAocliente.writeObject(resposta);
 			transmissorAocliente.flush();
+			conexaoAocliente.close();
+			break;
 		}
 	}
 }
 
-
+public static void escreveLog(ArrayList<String> log, Servidor servidor, Mensagem mensagem)
+{
+  log = servidor.voltaLog(mensagem);
+  for(int i = 0; i < log.size() ; i++ )
+  System.out.println(log.get(i));
+	  
+  
+	  
+	
+}
 	}
 
 

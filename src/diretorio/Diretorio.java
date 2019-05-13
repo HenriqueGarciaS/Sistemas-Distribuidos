@@ -40,6 +40,7 @@ public class Diretorio {
                           ObjectOutputStream transmissor = new ObjectOutputStream(requisisaoAServidor.getOutputStream());
                           transmissor.writeObject(mensagem_recebida);
                           transmissor.flush();
+                          
                       }
                       break;
                   case 2:
@@ -52,6 +53,7 @@ public class Diretorio {
                           transmissor.writeObject(mensagem_recebida);
                           transmissor.flush();
                       }
+                      break;
               }
               }
           }

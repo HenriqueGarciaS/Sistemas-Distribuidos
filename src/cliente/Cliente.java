@@ -35,10 +35,14 @@ public class Cliente {
                   Mensagem mensagem_envio = new Mensagem(1,linha,portaCliente);
                   transmissor_ao_diretorio.writeObject(mensagem_envio);
                   transmissor_ao_diretorio.flush();
+                  Long tempoDechegada = System.nanoTime();
                   Socket resposta = resposta_do_servidor.accept();
                   ObjectInputStream receptor = new ObjectInputStream(resposta.getInputStream());
                   Mensagem mensagem_resposta = (Mensagem) receptor.readObject();
-                  System.out.println(mensagem_resposta.getMensagem());
+                  long tempoDamensagem = mensagem_resposta.getTempoDeinicio() - tempoDechegada;
+                  double tempoFinal = tempoDamensagem /1000000000;
+                  System.out.println("valor do atributo: "+mensagem_resposta.getMensagem()+" tempo da mensagem: "+tempoFinal);
+                  conexao_ao_diretorio.close();
                   break;
                }
              case "ESCREVER":
@@ -54,15 +58,18 @@ public class Cliente {
                     ObjectOutputStream escrever = new ObjectOutputStream(resposta.getOutputStream());
                     ObjectInputStream receptor = new ObjectInputStream(resposta.getInputStream());
                     Mensagem mensagem_resposta = (Mensagem) receptor.readObject();
-                    System.out.println(mensagem_resposta.getMensagem());
+                    System.out.println(mensagem_resposta);
                     System.out.println("digite o valor que será atribuido");
                     String valor = teclado.readLine();
                     Mensagem envio = new Mensagem(2,valor,portaCliente);
                     escrever.writeObject(envio);
                     escrever.flush();
+                    conexao_ao_diretorio.close();
+                    break;
                 }
            }
            }
+           resposta_do_servidor.close();
        }
        catch(Exception erro)
        {
